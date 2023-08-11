@@ -4,6 +4,7 @@ local commandview = require "core.commandview"
 
 local activated = false
 
+-- TODO per view map
 local function activate(setfn, resetfn)
   if not activated then
     activated = true
