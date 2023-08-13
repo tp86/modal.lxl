@@ -72,18 +72,16 @@ local function makemode(modekey, modemap, mt, wrapper)
   modes[modekey] = mode
 end
 
-local mapmt = {
-  __index = function(_, key)
-    core.log(key .. " not mapped")
-    return { nop }
-  end
-}
+local mapindexfn = function(_, key)
+  core.log(key .. " not mapped")
+  return { nop }
+end
 
 local function idwrap(actions) return actions end
 
 function modal.map(modemaps)
   for name, modemap in pairs(modemaps) do
-    makemode(name, modemap, mapmt, idwrap)
+    makemode(name, modemap, { __index = mapindexfn }, idwrap)
   end
 end
 
@@ -109,7 +107,9 @@ local function wrap(actions)
       elseif type(action) == "function" then
         performed = action(...)
       end
-      reset()
+      if performed then
+        reset()
+      end
       return performed
     end
     table.insert(wrapped, newaction)
@@ -118,18 +118,16 @@ local function wrap(actions)
   return wrapped
 end
 
-local submapmt = {
-  __index = function()
-    return { reset }
-  end
-}
+local submapindexfn = function()
+  return { reset }
+end
 
 function modal.submap(map)
   local function activatesubmode()
     setmode(activatesubmode)
   end
 
-  makemode(activatesubmode, map, submapmt, wrap)
+  makemode(activatesubmode, map, { __index = submapindexfn }, wrap)
 
   return activatesubmode
 end
